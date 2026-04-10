@@ -32,6 +32,49 @@ def orient(a: Point, b: Point, c: Point) -> float:
 
 
 # ------------------------------------------------------------
+# Correct Akl–Toussaint heuristic
+# ------------------------------------------------------------
+
+def akl_toussaint_filter(points: List[Point]) -> List[Point]:
+    if len(points) <= 4:
+        return points.copy()
+
+    # Extremal points
+    min_x = min(points, key=lambda p: p[0])
+    max_x = max(points, key=lambda p: p[0])
+    min_y = min(points, key=lambda p: p[1])
+    max_y = max(points, key=lambda p: p[1])
+
+    # Unique extrema
+    quad = list({min_x, max_x, min_y, max_y})
+
+    if len(quad) < 3:
+        return points.copy()
+
+    # Order quad CCW
+    quad = convex_hull(quad)
+
+    def strictly_inside(p: Point) -> bool:
+        n = len(quad)
+        inside = True
+        for i in range(n):
+            a = quad[i]
+            b = quad[(i + 1) % n]
+            if orient(a, b, p) < 0:
+                inside = False
+                break
+        return inside
+
+    retained = []
+    for p in points:
+        if not strictly_inside(p):
+            retained.append(p)
+        elif p in quad:
+            retained.append(p)
+
+    return retained
+
+# ------------------------------------------------------------
 # Convex envelope insertion (local, no cascading)
 # ------------------------------------------------------------
 
